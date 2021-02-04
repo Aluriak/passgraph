@@ -2,3 +2,5 @@
 
 python passgraph.py
 
+feh out.png
+
