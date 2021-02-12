@@ -20,7 +20,8 @@ def links_from_files():
         with open(dailyfile) as fd:
             for line in map(normalized, fd):
                 if '->' in line:
-                    humans = tuple(map(normalized_human, line.split('->')))
+                    humans = tuple(h for h in map(normalized_human, line.split('->')) if h)
+
                     if not set(humans) & set(HUMANS):
                         continue
                     for idx, pred in enumerate(humans):
@@ -36,12 +37,13 @@ def draw_links(links:[(str, str)], outfile:str):
     ASP_BISEAU_RULES = """
     obj_property(edge,arrowhead,normal).
     """
-    counts = Counter(pred for pred, _ in links)
+    counts = Counter(links)
     total_links = len(links)
-    def width_of(human):
-        return round(10 * counts[human] / total_links, 2)
+    def width_of(pred, succ):
+        return round(10 * counts[pred, succ] / total_links, 2)
     graph = ''.join(
-        f'link("{pred}","{succ}").  dot_property("{pred}","{succ}",penwidth,"{width_of(pred)}").\n'
+        f'link("{pred}","{succ}").  label("{pred}","{succ}","{counts[pred, succ]}").  '
+        f'dot_property("{pred}","{succ}",penwidth,"{width_of(pred, succ)}").\n'
         for pred, succ in links
     )
     biseau.compile_to_single_image(graph + ASP_BISEAU_RULES, outfile=outfile)
