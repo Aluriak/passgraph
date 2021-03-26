@@ -10,11 +10,11 @@ from collections import Counter, defaultdict
 def normalized(line:str) -> str:
     return line.lower().strip()
 def normalized_human(name:str) -> str:
-    return normalized(name).replace('-', '_').replace('ë', 'e')
+    return normalized(name).replace('-', '_').replace('ë', 'e').replace('é', 'e')
 
 
-ALIASES = {'jy': 'Jean_Yves', 'gaetan': 'Gaetan'}
-HUMANS = 'Jean_Yves', 'Lucas', 'Gaetan', 'Jordan', 'Florian', 'Benjamin', 'Clément'
+ALIASES = {'jean_yves': 'Jean_Yves', 'jy': 'Jean_Yves', 'gaetan': 'Gaetan'}
+HUMANS = 'Jean_Yves', 'Lucas', 'Gaetan', 'Clément', 'Jordan', 'Florian', 'Benjamin', 'Glenn', 'Laura'
 HUMANS = tuple(map(normalized_human, HUMANS))
 
 def human_chains_from_files():
@@ -50,13 +50,22 @@ def draw_links(firsts:dict, links:[(str, str)], outfile:str):
     counts = Counter(links)
     total_links = len(links)
     def width_of(pred, succ):
-        return round(10 * counts[pred, succ] / total_links, 2)
+        return round(35 * counts[pred, succ] / total_links, 2)
+    def humanized(name:str) -> str:
+        return name.title().replace('_', ' ').replace('Gaetan', 'Gaëtan')
     graph = ''.join(
         f'link("{pred}","{succ}").  label("{pred}","{succ}","{counts[pred, succ]}").  '
         f'dot_property("{pred}","{succ}",penwidth,"{width_of(pred, succ)}").\n'
         for pred, succ in links
-    ) + ''.join(f'dot_property("{human}",width,"{nb*0.2+0.2}").\n' for human, nb in firsts.items())
-    biseau.compile_to_single_image(graph + ASP_BISEAU_RULES, outfile=outfile)
+    ) + ''.join(
+        f'dot_property("{human}",width,"{nb*0.2+0.2}").\n'
+        for human, nb in firsts.items()
+    ) + ''.join(
+        f'label("{human}","{humanized(human)}").\n'
+        for human in HUMANS
+    )
+    print(graph)
+    biseau.compile_to_single_image(graph + ASP_BISEAU_RULES, outfile=outfile, dotfile=outfile + '.dot')
     print(f'saved into {outfile}')
 
 
