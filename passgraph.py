@@ -50,7 +50,7 @@ def draw_links(firsts:dict, links:[(str, str)], outfile:str):
     counts = Counter(links)
     total_links = len(links)
     def width_of(pred, succ):
-        return round(35 * counts[pred, succ] / total_links, 2)
+        return round(50 * counts[pred, succ] / total_links, 2)
     def humanized(name:str) -> str:
         return name.title().replace('_', ' ').replace('Gaetan', 'Gaëtan')
     graph = ''.join(
