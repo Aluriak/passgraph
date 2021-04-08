@@ -4,7 +4,15 @@
 
 import glob
 import biseau
+import argparse
+import itertools
 from collections import Counter, defaultdict
+
+
+def parse_cli() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('files', nargs='+', type=str, help='globs describing files to edit')
+    return parser.parse_args()
 
 
 def normalized(line:str) -> str:
@@ -17,8 +25,8 @@ ALIASES = {'jean_yves': 'Jean_Yves', 'jy': 'Jean_Yves', 'gaetan': 'Gaetan'}
 HUMANS = 'Jean_Yves', 'Lucas', 'Gaetan', 'Clément', 'Jordan', 'Florian', 'Benjamin', 'Glenn', 'Laura'
 HUMANS = tuple(map(normalized_human, HUMANS))
 
-def human_chains_from_files():
-    for dailyfile in glob.glob('/home/lucas/notes/daily-conv*'):
+def human_chains_from_files(filenames:[str]):
+    for dailyfile in filenames:
         with open(dailyfile) as fd:
             for line in map(normalized, fd):
                 if '->' in line:
@@ -27,10 +35,10 @@ def human_chains_from_files():
                         continue
                     yield humans
 
-def firsts_and_links_from_file() -> (dict, [(str, str)]):
+def firsts_and_links_from_file(filenames:[str]) -> (dict, [(str, str)]):
     first = defaultdict(int)  # number of time a given human is first speaker
     def gen_():
-        for humans in human_chains_from_files():
+        for humans in human_chains_from_files(filenames):
             first[humans[0]] += 1
             for idx, pred in enumerate(humans):
                 try:
@@ -70,6 +78,7 @@ def draw_links(firsts:dict, links:[(str, str)], outfile:str):
 
 
 if __name__ == '__main__':
-    draw_links(*firsts_and_links_from_file(), 'out.png')
-
+    args = parse_cli()
+    fnames = tuple(itertools.chain.from_iterable(map(glob.glob, args.files)))
+    draw_links(*firsts_and_links_from_file(fnames), 'out.png')
 
